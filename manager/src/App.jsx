@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { RoutesPage } from './pages/RoutesPage';
 import { LogsPage } from './pages/LogsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import ApiDocsPage from './pages/ApiDocsPage';
 
 function ProtectedRoute({ children }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -83,6 +84,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <SettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/api-docs"
+                  element={
+                    <ProtectedRoute>
+                      <ApiDocsPage />
                     </ProtectedRoute>
                   }
                 />

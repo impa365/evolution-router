@@ -162,8 +162,7 @@ export function SettingsPage() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
-            href="/api/v1"
-            target="_blank"
+            href="/manager/api-docs"
             className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <p className="font-medium text-gray-900 mb-1">API Documentation</p>
