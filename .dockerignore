@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+GUIDE.md
+*.md
+
+# Manager build artifacts (será feito no Dockerfile)
+manager/node_modules/
+manager/dist/
+manager/.vite/
+
+# Build artifacts
+build/
+*.exe
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml

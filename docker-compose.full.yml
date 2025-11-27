@@ -1,0 +1,115 @@
+# Evolution Router com Evolution API integrada
+version: '3.8'
+
+services:
+  # Evolution API
+  evolution-api:
+    image: evoapicloud/evolution-go:latest
+    container_name: evolution-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      SERVER_PORT: 4000
+      CLIENT_NAME: "evolution"
+      GLOBAL_API_KEY: "sua-chave-api-evolution"
+      
+      # Database Evolution
+      POSTGRES_AUTH_DB: "postgresql://postgres:postgres@postgres-evolution:5432/evogo_auth?sslmode=disable"
+      POSTGRES_USERS_DB: "postgresql://postgres:postgres@postgres-evolution:5432/evogo_users?sslmode=disable"
+      
+      # Webhook para Evolution Router
+      WEBHOOK_URL: "http://evolution-router:3000/webhook/evolution/YOUR_ROUTE_ID"
+      WEBHOOKFILES: "true"
+      
+      WADEBUG: "INFO"
+      LOGTYPE: "console"
+      CONNECT_ON_STARTUP: "false"
+      
+    volumes:
+      - evolution_data:/app/dbdata
+      - evolution_logs:/app/logs
+    networks:
+      - shared_network
+    depends_on:
+      - postgres-evolution
+
+  postgres-evolution:
+    image: postgres:15-alpine
+    container_name: postgres-evolution
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_evolution_data:/var/lib/postgresql/data
+    networks:
+      - shared_network
+
+  # Evolution Router
+  evolution-router:
+    build: .
+    container_name: evolution-router
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      SERVER_PORT: 3000
+      GIN_MODE: release
+
+      # Database Router
+      POSTGRES_HOST: postgres-router
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: router
+      POSTGRES_PASSWORD: router123
+      POSTGRES_DB: evolution_router
+      POSTGRES_SSLMODE: disable
+
+      # Security
+      API_KEY: sua-chave-api-router
+
+      # Retry
+      MAX_RETRY_ATTEMPTS: 3
+      RETRY_DELAY_SECONDS: 5
+      RETRY_BACKOFF_MULTIPLIER: 2
+
+      # Worker
+      WORKER_POOL_SIZE: 10
+      WEBHOOK_TIMEOUT_SECONDS: 30
+
+    depends_on:
+      - postgres-router
+    networks:
+      - shared_network
+
+  postgres-router:
+    image: postgres:15-alpine
+    container_name: postgres-router
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: router
+      POSTGRES_PASSWORD: router123
+      POSTGRES_DB: evolution_router
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_router_data:/var/lib/postgresql/data
+    networks:
+      - shared_network
+
+volumes:
+  evolution_data:
+    driver: local
+  evolution_logs:
+    driver: local
+  postgres_evolution_data:
+    driver: local
+  postgres_router_data:
+    driver: local
+
+networks:
+  shared_network:
+    driver: bridge

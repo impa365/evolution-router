@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  evolution-router:
+    build: .
+    container_name: evolution-router
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Server
+      SERVER_PORT: 3000
+      GIN_MODE: release
+
+      # Database
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: router
+      POSTGRES_PASSWORD: router123
+      POSTGRES_DB: evolution_router
+      POSTGRES_SSLMODE: disable
+
+      # Security
+      API_KEY: change-this-to-a-secure-key
+
+      # Retry
+      MAX_RETRY_ATTEMPTS: 3
+      RETRY_DELAY_SECONDS: 5
+      RETRY_BACKOFF_MULTIPLIER: 2
+
+      # Logs
+      LOG_LEVEL: info
+      LOG_RETENTION_DAYS: 30
+
+      # Worker
+      WORKER_POOL_SIZE: 10
+      WEBHOOK_TIMEOUT_SECONDS: 30
+
+    depends_on:
+      - postgres
+    networks:
+      - router_network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: router-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: router
+      POSTGRES_PASSWORD: router123
+      POSTGRES_DB: evolution_router
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - router_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  router_network:
+    driver: bridge
