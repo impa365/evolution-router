@@ -185,11 +185,34 @@ func (d *Dispatcher) sendWebhook(target models.Target, payload map[string]interf
 	// Ler resposta
 	responseBody, _ := io.ReadAll(resp.Body)
 	var responseData map[string]interface{}
-	_ = json.Unmarshal(responseBody, &responseData)
+
+	// Tentar parsear como JSON
+	if err := json.Unmarshal(responseBody, &responseData); err != nil {
+		// Se não for JSON válido, salvar como string
+		responseData = map[string]interface{}{
+			"raw_response": string(responseBody),
+		}
+	}
 
 	// Verificar status code
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return resp.StatusCode, responseData, fmt.Errorf("received status code %d", resp.StatusCode)
+		if responseData == nil {
+			responseData = map[string]interface{}{
+				"error":       "Empty response body",
+				"status_code": resp.StatusCode,
+			}
+		}
+		return resp.StatusCode, responseData, fmt.Errorf("received status code %d: %s", resp.StatusCode, string(responseBody))
+	}
+
+	// Verificar se o corpo da resposta indica erro (mesmo com status 200)
+	if errorMsg, hasError := responseData["error"]; hasError {
+		return resp.StatusCode, responseData, fmt.Errorf("endpoint returned error: %v", errorMsg)
+	}
+	if success, hasSuccess := responseData["success"]; hasSuccess {
+		if successBool, ok := success.(bool); ok && !successBool {
+			return resp.StatusCode, responseData, fmt.Errorf("endpoint returned success=false")
+		}
 	}
 
 	return resp.StatusCode, responseData, nil

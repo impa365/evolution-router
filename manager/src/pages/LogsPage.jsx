@@ -235,7 +235,7 @@ export function LogsPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Evento</p>
-                    <p className="font-medium">{selectedLog.event_type || 'N/A'}</p>
+                    <p className="font-medium">{selectedLog.event_type || selectedLog.source}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Tempo de Processamento</p>
