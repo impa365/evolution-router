@@ -94,21 +94,28 @@ func (s *ReceiverService) ProcessWebhook(routeID string, sourceFromURL string, p
 		return nil, err
 	}
 
-	// Disparar para todos os targets ativos
+	// Disparar para todos os targets ativos e aguardar resultados
 	targetsSent := 0
 	targetsFailed := 0
+	var resultChannels []chan dispatcher.DispatchResult
 
 	for _, target := range route.Targets {
 		if !target.Enabled {
 			continue
 		}
 
-		// Enviar para o dispatcher de forma assíncrona
-		err := s.dispatcher.DispatchWebhook(log.ID, target, transformedPayload)
-		if err != nil {
-			targetsFailed++
-		} else {
+		// Enviar para o dispatcher e coletar channel de resultado
+		resultChan := s.dispatcher.DispatchWebhook(log.ID, target, transformedPayload)
+		resultChannels = append(resultChannels, resultChan)
+	}
+
+	// Aguardar todos os resultados
+	for _, resultChan := range resultChannels {
+		result := <-resultChan
+		if result.Success {
 			targetsSent++
+		} else {
+			targetsFailed++
 		}
 	}
 

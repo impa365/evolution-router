@@ -20,6 +20,12 @@ type DispatchJob struct {
 	WebhookLogID string
 	Target       models.Target
 	Payload      map[string]interface{}
+	ResultChan   chan DispatchResult
+}
+
+type DispatchResult struct {
+	Success bool
+	Error   error
 }
 
 type Dispatcher struct {
@@ -61,19 +67,27 @@ func (d *Dispatcher) Stop() {
 	log.Println("✅ Todos os workers foram finalizados")
 }
 
-// DispatchWebhook adiciona um job na fila
-func (d *Dispatcher) DispatchWebhook(webhookLogID string, target models.Target, payload map[string]interface{}) error {
+// DispatchWebhook adiciona um job na fila e retorna um channel para resultado
+func (d *Dispatcher) DispatchWebhook(webhookLogID string, target models.Target, payload map[string]interface{}) chan DispatchResult {
+	resultChan := make(chan DispatchResult, 1)
+	
 	job := DispatchJob{
 		WebhookLogID: webhookLogID,
 		Target:       target,
 		Payload:      payload,
+		ResultChan:   resultChan,
 	}
 
 	select {
 	case d.jobQueue <- job:
-		return nil
+		return resultChan
 	default:
-		return fmt.Errorf("job queue is full")
+		// Fila cheia
+		resultChan <- DispatchResult{
+			Success: false,
+			Error:   fmt.Errorf("job queue is full"),
+		}
+		return resultChan
 	}
 }
 
@@ -98,6 +112,8 @@ func (d *Dispatcher) processJob(job DispatchJob) {
 	maxAttempts := d.config.MaxRetryAttempts
 	retryDelay := time.Duration(d.config.RetryDelaySeconds) * time.Second
 	backoffMultiplier := d.config.RetryBackoffMultiplier
+
+	success := false
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		retryLog := &models.RetryLog{
@@ -139,6 +155,12 @@ func (d *Dispatcher) processJob(job DispatchJob) {
 			// Última tentativa falhou
 			d.db.Create(retryLog)
 			log.Printf("❌ Falha ao enviar webhook para %s após %d tentativas", job.Target.URL, maxAttempts)
+			
+			// Notificar falha
+			if job.ResultChan != nil {
+				job.ResultChan <- DispatchResult{Success: false, Error: err}
+				close(job.ResultChan)
+			}
 			return
 		}
 
@@ -146,7 +168,14 @@ func (d *Dispatcher) processJob(job DispatchJob) {
 		retryLog.Status = "success"
 		d.db.Create(retryLog)
 		log.Printf("✅ Webhook enviado com sucesso para %s (attempt %d)", job.Target.URL, attempt)
-		return
+		success = true
+		break
+	}
+
+	// Notificar resultado
+	if job.ResultChan != nil {
+		job.ResultChan <- DispatchResult{Success: success, Error: nil}
+		close(job.ResultChan)
 	}
 }
 
