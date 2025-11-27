@@ -125,9 +125,9 @@ export function Header() {
                 </div>
 
                 <div className="px-4 py-2 border-t border-gray-200">
-                  <button className="text-xs text-primary-600 hover:text-primary-700 font-medium w-full text-center">
+                  <a href="/manager/logs" className="text-xs text-primary-600 hover:text-primary-700 font-medium w-full text-center block py-1">
                     Ver todas as notificações
-                  </button>
+                  </a>
                 </div>
               </div>
             )}

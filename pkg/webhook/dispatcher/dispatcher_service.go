@@ -70,7 +70,7 @@ func (d *Dispatcher) Stop() {
 // DispatchWebhook adiciona um job na fila e retorna um channel para resultado
 func (d *Dispatcher) DispatchWebhook(webhookLogID string, target models.Target, payload map[string]interface{}) chan DispatchResult {
 	resultChan := make(chan DispatchResult, 1)
-	
+
 	job := DispatchJob{
 		WebhookLogID: webhookLogID,
 		Target:       target,
@@ -155,7 +155,7 @@ func (d *Dispatcher) processJob(job DispatchJob) {
 			// Última tentativa falhou
 			d.db.Create(retryLog)
 			log.Printf("❌ Falha ao enviar webhook para %s após %d tentativas", job.Target.URL, maxAttempts)
-			
+
 			// Notificar falha
 			if job.ResultChan != nil {
 				job.ResultChan <- DispatchResult{Success: false, Error: err}

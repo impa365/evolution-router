@@ -216,7 +216,7 @@ export function DashboardPage() {
             <h3 className="text-lg font-semibold text-gray-900">
               Atividade Recente
             </h3>
-            <a href="/logs" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <a href="/manager/logs" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               Ver todos
             </a>
           </div>
@@ -255,7 +255,7 @@ export function DashboardPage() {
             <h3 className="text-lg font-semibold text-gray-900">
               Rotas Ativas
             </h3>
-            <a href="/routes" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <a href="/manager/routes" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
               Ver todas
             </a>
           </div>

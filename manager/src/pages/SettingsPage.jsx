@@ -170,7 +170,7 @@ export function SettingsPage() {
             <p className="text-sm text-gray-600">Veja a documentação completa da API</p>
           </a>
           <a
-            href="https://github.com/EvolutionAPI"
+            href="https://github.com/impa365/evolution-router"
             target="_blank"
             className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
