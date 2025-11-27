@@ -412,13 +412,13 @@ Contribuições são bem-vindas! Por favor:
 
 ## 💬 Suporte
 
-- 📧 Email: suporte@evolutionapi.com
-- 💬 Discord: [Evolution API Community](https://discord.gg/evolutionapi)
-- 📖 Documentação: [docs.evolutionapi.com](https://docs.evolutionapi.com)
+- 📧 Email: suporte@impa365.com
+- 💬 Comunidade: [IMPA365 Community](https://comunidade.impa365.com)
+- 📖 Documentação: Em breve
 
 ## 🙏 Agradecimentos
 
-Desenvolvido com ❤️ pela equipe [Evolution API](https://github.com/EvolutionAPI)
+Desenvolvido com ❤️ pela equipe [IMPA365](https://github.com/impa365)
 
 ---
 
