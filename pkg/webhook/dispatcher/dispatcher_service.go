@@ -182,37 +182,34 @@ func (d *Dispatcher) sendWebhook(target models.Target, payload map[string]interf
 	}
 	defer resp.Body.Close()
 
-	// Ler resposta
-	responseBody, _ := io.ReadAll(resp.Body)
-	var responseData map[string]interface{}
-
-	// Tentar parsear como JSON
-	if err := json.Unmarshal(responseBody, &responseData); err != nil {
-		// Se não for JSON válido, salvar como string
-		responseData = map[string]interface{}{
-			"raw_response": string(responseBody),
-		}
+	// Ler resposta completa
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return resp.StatusCode, nil, fmt.Errorf("error reading response body: %w", err)
 	}
 
-	// Verificar status code
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if responseData == nil {
+	// Tentar fazer parse da resposta como JSON
+	var responseData map[string]interface{}
+	if len(responseBody) > 0 {
+		if err := json.Unmarshal(responseBody, &responseData); err != nil {
+			// Se não for JSON válido, salvar como texto
 			responseData = map[string]interface{}{
-				"error":       "Empty response body",
-				"status_code": resp.StatusCode,
+				"raw_response": string(responseBody),
+				"content_type": resp.Header.Get("Content-Type"),
 			}
 		}
-		return resp.StatusCode, responseData, fmt.Errorf("received status code %d: %s", resp.StatusCode, string(responseBody))
 	}
 
-	// Verificar se o corpo da resposta indica erro (mesmo com status 200)
-	if errorMsg, hasError := responseData["error"]; hasError {
-		return resp.StatusCode, responseData, fmt.Errorf("endpoint returned error: %v", errorMsg)
+	// Adicionar informações do status no response
+	if responseData == nil {
+		responseData = make(map[string]interface{})
 	}
-	if success, hasSuccess := responseData["success"]; hasSuccess {
-		if successBool, ok := success.(bool); ok && !successBool {
-			return resp.StatusCode, responseData, fmt.Errorf("endpoint returned success=false")
-		}
+	responseData["status_code"] = resp.StatusCode
+	responseData["status"] = resp.Status
+
+	// Verificar status code - qualquer código fora de 2xx é erro
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return resp.StatusCode, responseData, fmt.Errorf("received status code %d: %s", resp.StatusCode, resp.Status)
 	}
 
 	return resp.StatusCode, responseData, nil
